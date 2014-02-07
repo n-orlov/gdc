@@ -15,7 +15,7 @@ public class SimpleTimeMeasurer {
     public SimpleTimeMeasurer(String action) {
         start = new Date();
         this.action = action;
-        logger.debug(String.format("Starting measurement of action: %s", action));
+        //logger.debug(String.format("Starting measurement of action: %s", action));
     }
 
     public void logStep(String stepName) {

@@ -22,6 +22,16 @@
                         }
                     });
                 }
+                function postAjax(byUrl, method, dataType) {
+                    var xhr = jQuery.ajax({
+                        url: byUrl,
+                        type: method,
+                        dataType: dataType
+                    });
+                    setTimeout(function() {
+                        xhr.abort();
+                    }, 100);
+                }
                 function getSimpleCallback(success, $resultDisplay) {
                     return function(res) {
                         if ($resultDisplay) {
@@ -74,17 +84,23 @@
                 });
 
                 var timers = [];
+                var started = false;
                 $('.addRandomGeoDataPane .stopBtn').click(function() {
                     for (var i = 0; i < timers.length; i++)
-                        clearInterval(timers[i]);
-                        timers = [];
+                        timers[i].active = false;
+                        started = false;
                 });
                 $('.addRandomGeoDataPane .startBtn').click(function() {
+                    if (!started) $(".addRandomGeoDataPane .intervals").empty();
+                    started = true;
                     var objectIds = $(".addRandomGeoDataPane .objectId").val().split('\n');
                     $.each(objectIds, function (k,objectId) {
+                        var timer = {
+                            active: true
+                        };
                         if (!objectId || objectId == "") return;
-                        var $el = $('<div>');
-                        $el.appendTo($(".addRandomGeoDataPane .intervals"));
+                        timer.$el = $('<div>');
+                        timer.$el.appendTo($(".addRandomGeoDataPane .intervals"));
                         var count = 0;
                         var avgt = 0;
 
@@ -107,6 +123,16 @@
                             var lon = getRandomArbitary(30, 31);
                             var lat = getRandomArbitary(60, 61);
                             var start = new Date();
+/*
+                            postAjax("data/addGeoData?"
+                                + "objectId="+encodeURIComponent(objectId)
+                                + "&dateDevice="+encodeURIComponent(dateDevice)
+                                + "&lon="+encodeURIComponent(lon)
+                                + "&lat="+encodeURIComponent(lat),
+                                'GET',"text");
+                            count = count + 1;
+                            timer.$el.text(objectId + ": added: " + count + " recs");
+*/
                             ajax("data/addGeoData?"
                                 + "objectId="+encodeURIComponent(objectId)
                                 + "&dateDevice="+encodeURIComponent(dateDevice)
@@ -122,7 +148,9 @@
                                         tmcs = 0;
                                     }
                                     count = count + 1;
-                                    $el.text(objectId + ": added: " + count + " recs, avg response: " + Math.round(avg) + " ms");
+                                    timer.$el.text(objectId + ": added: " + count + " recs, avg response: " + Math.round(avg) + " ms");
+                                    if (timer.active)
+                                        setTimeout(addData,0)
                                 },
                                 function (res) {
 
@@ -130,9 +158,8 @@
                                 },
                                 "text");
                         }
-
-                        timers.push(setInterval(addData, interval));
-
+                        timers.push(timer);
+                        setTimeout(addData,0)
                     });
 
                 });

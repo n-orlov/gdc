@@ -13,10 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by int21h on 30.01.14.
@@ -51,6 +48,38 @@ public class GDCDao extends AbstractDao {
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 geoData.getId(), geoData.getObjectId(), geoData.getDateAdd(), geoData.getDateDevice(),
                 geoData.getLon(), geoData.getLat(), geoData.getSpeed(), geoData.getDegree());
+        measurer.logFinish();
+    }
+
+    private String getBatchGeoDataInsertSQL(int recordCount) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("INSERT INTO GEO_DATA (ID, OBJECT_ID, DATE_ADD, DATE_DEVICE, LON, LAT, SPEED, DEG) ");
+        for (int i = 0; i < recordCount; i++) {
+            builder.append("SELECT CAST(? as D_GUID), CAST(? as D_GUID), CAST(? as D_TIMESTAMP), CAST(? as D_TIMESTAMP), " +
+                    "CAST(? AS DOUBLE PRECISION), CAST(? AS DOUBLE PRECISION), " +
+                    "CAST(? AS DOUBLE PRECISION), CAST(? AS DOUBLE PRECISION) FROM RDB$DATABASE");
+            if (i < recordCount - 1) {
+                builder.append(" UNION ");
+            }
+        }
+        return builder.toString();
+    }
+
+    public void addGeoData(List<GeoData> geoDataList) {
+        SimpleTimeMeasurer measurer = new SimpleTimeMeasurer("addGeoData / DAO");
+        Object[] params = new Object[8 * geoDataList.size()];
+        int i = 0;
+        for (GeoData geoData : geoDataList) {
+            params[i++] = geoData.getId();
+            params[i++] = geoData.getObjectId();
+            params[i++] = geoData.getDateAdd();
+            params[i++] = geoData.getDateDevice();
+            params[i++] = geoData.getLon();
+            params[i++] = geoData.getLat();
+            params[i++] = geoData.getSpeed();
+            params[i++] = geoData.getDegree();
+        }
+        getJdbcTemplate().update(getBatchGeoDataInsertSQL(geoDataList.size()), params);
         measurer.logFinish();
     }
 

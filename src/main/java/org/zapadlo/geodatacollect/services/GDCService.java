@@ -7,9 +7,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.zapadlo.geodatacollect.dao.GDCDao;
 import org.zapadlo.geodatacollect.entity.GeoData;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  * Created by int21h on 30.01.14.
@@ -18,8 +20,39 @@ import java.util.Map;
 public class GDCService {
     static final Logger logger = Logger.getLogger(GDCService.class);
 
+    static final int GEO_DATA_INSERT_BATCH_SIZE = 100;
+
+    BlockingQueue<GeoData> newData = new ArrayBlockingQueue<GeoData>(GEO_DATA_INSERT_BATCH_SIZE);
+
+    ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+
+
+    {
+        scheduledExecutor.scheduleWithFixedDelay(new GeoDataInsertTask(),0, 10, TimeUnit.MILLISECONDS);
+    }
+
     @Autowired
     GDCDao GDCDao;
+
+    private class GeoDataInsertTask implements Runnable {
+        @Override
+        public void run() {
+            List<GeoData> toInsert = new ArrayList<GeoData>();
+            while (toInsert.size() < GEO_DATA_INSERT_BATCH_SIZE) {
+                GeoData geoData = newData.poll();
+                if (geoData == null) break;
+                toInsert.add(geoData);
+            }
+            if (!toInsert.isEmpty()) {
+                try {
+                    GDCDao.addGeoData(toInsert);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     @Transactional(readOnly = true)
     public Map<String, String> getProperties() {
@@ -41,9 +74,9 @@ public class GDCService {
         }
     }
 
-    @Transactional
     public void addGeoData(GeoData geoData) {
-        GDCDao.addGeoData(geoData);
+        //GDCDao.addGeoData(geoData);
+        newData.offer(geoData);
     }
 
 

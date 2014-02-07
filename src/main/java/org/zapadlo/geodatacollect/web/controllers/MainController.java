@@ -8,7 +8,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.zapadlo.geodatacollect.entity.GeoData;
 import org.zapadlo.geodatacollect.services.GDCService;
-import org.zapadlo.geodatacollect.utils.SimpleTimeMeasurer;
 import org.zapadlo.geodatacollect.utils.Utils;
 
 import java.util.Date;
@@ -34,7 +33,6 @@ public class MainController {
             @RequestParam(required = false) Double speed,
             @RequestParam(required = false) Double degree
     ) {
-        SimpleTimeMeasurer measurer = new SimpleTimeMeasurer("addGeoData / Controller");
         gdcService.addGeoData(new GeoData.Builder()
                 .objectId(objectId)
                 .dateDevice(dateDevice)
@@ -43,7 +41,6 @@ public class MainController {
                 .speed(speed)
                 .degree(degree)
                 .build());
-        measurer.logFinish();
     }
 
     @RequestMapping(value = "getObjectTrack")
