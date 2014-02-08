@@ -47,18 +47,18 @@ public class GDCDao extends AbstractDao {
     public void addGeoData(GeoData geoData) {
         SimpleTimeMeasurer measurer = new SimpleTimeMeasurer("addGeoData / DAO");
         getJdbcTemplate().update("INSERT INTO GEO_DATA " +
-                "(ID, OBJECT_ID, DATE_ADD, DATE_DEVICE, LON, LAT, SPEED, DEG) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                geoData.getId(), geoData.getObjectId(), geoData.getDateAdd(), geoData.getDateDevice(),
+                "(OBJECT_ID, DATE_ADD, DATE_DEVICE, LON, LAT, SPEED, DEG) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                geoData.getObjectId(), geoData.getDateAdd(), geoData.getDateDevice(),
                 geoData.getLon(), geoData.getLat(), geoData.getSpeed(), geoData.getDegree());
         measurer.logFinish();
     }
 
     private String getBatchGeoDataInsertSQL(int recordCount) {
         StringBuilder builder = new StringBuilder();
-        builder.append("INSERT INTO GEO_DATA (ID, OBJECT_ID, DATE_ADD, DATE_DEVICE, LON, LAT, SPEED, DEG) ");
+        builder.append("INSERT INTO GEO_DATA (OBJECT_ID, DATE_ADD, DATE_DEVICE, LON, LAT, SPEED, DEG) ");
         for (int i = 0; i < recordCount; i++) {
-            builder.append("SELECT CAST(? as D_GUID), CAST(? as D_GUID), CAST(? as D_TIMESTAMP), CAST(? as D_TIMESTAMP), " +
+            builder.append("SELECT CAST(? as D_GUID), CAST(? as D_TIMESTAMP), CAST(? as D_TIMESTAMP), " +
                     "CAST(? AS DOUBLE PRECISION), CAST(? AS DOUBLE PRECISION), " +
                     "CAST(? AS DOUBLE PRECISION), CAST(? AS DOUBLE PRECISION) FROM RDB$DATABASE");
             if (i < recordCount - 1) {
@@ -70,10 +70,9 @@ public class GDCDao extends AbstractDao {
 
     public void addGeoData(List<GeoData> geoDataList) {
         SimpleTimeMeasurer measurer = new SimpleTimeMeasurer("addGeoData / DAO");
-        Object[] params = new Object[8 * geoDataList.size()];
+        Object[] params = new Object[7 * geoDataList.size()];
         int i = 0;
         for (GeoData geoData : geoDataList) {
-            params[i++] = geoData.getId();
             params[i++] = geoData.getObjectId();
             params[i++] = geoData.getDateAdd();
             params[i++] = geoData.getDateDevice();
@@ -123,7 +122,7 @@ public class GDCDao extends AbstractDao {
                 "GD.SPEED," +
                 "GD.DEG " +
                 "from GEO_OBJECTS o " +
-                "left join GEO_DATA gd on (o.LAST_GEO_DATA = gd.ID) " +
+                "left join GEO_DATA gd on (o.LAST_GEO_DATA_ID = gd.ID) " +
                 "where o.ID = ?",
                 new GeoDataRowMapper(),
                 objectId
@@ -158,7 +157,7 @@ public class GDCDao extends AbstractDao {
         @Override
         public GeoData mapRow(ResultSet rs, int rowNum) throws SQLException {
             return new GeoData.Builder()
-                    .id(rs.getString("ID"))
+                    .id(rs.getInt("ID"))
                     .objectId(rs.getString("OBJECT_ID"))
                     .dateAdd(rs.getDate("DATE_ADD"))
                     .dateDevice(rs.getDate("DATE_DEVICE"))

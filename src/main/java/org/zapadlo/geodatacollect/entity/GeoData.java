@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.zapadlo.geodatacollect.utils.JSONDateTimeSerializer;
 
 import java.util.Date;
-import java.util.UUID;
 
 /**
  * Created by int21h on 05.02.14.
@@ -14,7 +13,7 @@ public class GeoData {
     public static class Builder {
         private GeoData geoData = new GeoData();
 
-        public Builder id(String id) {
+        public Builder id(Integer id) {
             geoData.id = id;
             return this;
         }
@@ -51,9 +50,6 @@ public class GeoData {
             if (geoData.objectId == null) {
                 throw new IllegalArgumentException();
             }
-            if (geoData.id == null || geoData.id.isEmpty()) {
-                geoData.id = UUID.randomUUID().toString().replaceAll("-", "");
-            }
         }
 
         public GeoData build() {
@@ -62,7 +58,7 @@ public class GeoData {
         }
     }
 
-    private String id;
+    private Integer id;
     private String objectId;
     private Date dateAdd;
     private Date dateDevice;
@@ -74,7 +70,7 @@ public class GeoData {
     private GeoData() {
     }
 
-    public String getId() {
+    public Integer getId() {
         return id;
     }
 

@@ -1,5 +1,6 @@
 package org.zapadlo.geodatacollect.services;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -17,18 +18,20 @@ import java.util.concurrent.*;
  */
 @Service
 public class GDCService {
-    @Autowired
-    GDCDao gdcDao;
+    static final int GEO_DATA_INSERT_BATCH_SIZE = 100;
+    static final int GEO_DATA_INSERT_TASK_COUNT = 3;
 
     static final Logger logger = Logger.getLogger(GDCService.class);
 
-    static final int GEO_DATA_INSERT_BATCH_SIZE = 100;
-    static final int GEO_DATA_INSERT_TASK_COUNT = 3;
+    @Autowired
+    GDCDao gdcDao;
 
     private volatile int count = 0;
     private volatile Date cut = new Date();
 
     private Random randomGenerator = new Random();
+
+    private Map<String, Integer> objectThread = new ConcurrentHashMap<String, Integer>();
 
     private ApplicationContext applicationContext;
 
@@ -113,7 +116,12 @@ public class GDCService {
 
     public void addGeoData(GeoData geoData) throws InterruptedException {
         //gdcDao.addGeoData(geoData);
-        insertTaskList.get(randomGenerator.nextInt(insertTaskList.size())).addItemToInsert(geoData);
+        Integer threadId = objectThread.get(StringUtils.upperCase(geoData.getObjectId()));
+        if (threadId == null) {
+            threadId = randomGenerator.nextInt(insertTaskList.size());
+            objectThread.put(StringUtils.upperCase(geoData.getObjectId()), threadId);
+        }
+        insertTaskList.get(threadId).addItemToInsert(geoData);
     }
 
 
