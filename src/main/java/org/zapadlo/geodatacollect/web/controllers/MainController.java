@@ -32,7 +32,7 @@ public class MainController {
             @RequestParam Double lat,
             @RequestParam(required = false) Double speed,
             @RequestParam(required = false) Double degree
-    ) {
+    ) throws InterruptedException {
         gdcService.addGeoData(new GeoData.Builder()
                 .objectId(objectId)
                 .dateDevice(dateDevice)

@@ -107,9 +107,6 @@
                         var tmc1 = 0;
                         var tmcs = 0;
 
-                        var interval = parseInt($(".addRandomGeoDataPane .interval").val());
-                        if (!interval || interval <= 0) interval = 1000;
-
                         function getRandomArbitary(min, max)
                         {
                           return Math.random() * (max - min) + min;
@@ -123,16 +120,6 @@
                             var lon = getRandomArbitary(30, 31);
                             var lat = getRandomArbitary(60, 61);
                             var start = new Date();
-/*
-                            postAjax("data/addGeoData?"
-                                + "objectId="+encodeURIComponent(objectId)
-                                + "&dateDevice="+encodeURIComponent(dateDevice)
-                                + "&lon="+encodeURIComponent(lon)
-                                + "&lat="+encodeURIComponent(lat),
-                                'GET',"text");
-                            count = count + 1;
-                            timer.$el.text(objectId + ": added: " + count + " recs");
-*/
                             ajax("data/addGeoData?"
                                 + "objectId="+encodeURIComponent(objectId)
                                 + "&dateDevice="+encodeURIComponent(dateDevice)
@@ -143,7 +130,7 @@
                                     tmc1 = tmc1 + 1;
                                     tmcs = tmcs + (new Date() - start);
                                     avg = tmcs / tmc1;
-                                    if (tmc1 > 10) {
+                                    if (tmc1 > 50) {
                                         tmc1 = 0;
                                         tmcs = 0;
                                     }
@@ -276,14 +263,6 @@
                     </td>
                     <td>
 			            <textarea class="objectId"></textarea>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-			            Interval, ms:
-                    </td>
-                    <td>
-			            <input type="text" class="interval" value="1000" />
                     </td>
                 </tr>
 			</table>
