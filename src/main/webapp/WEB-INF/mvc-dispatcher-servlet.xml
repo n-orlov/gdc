@@ -25,6 +25,8 @@
         <property name="password" value="${jdbc.password}" />
         <property name="connectionProperties" value="lc_ctype=${jdbc.charset}" />
         <property name="validationQuery" value="select 1 from rdb$database" />
+        <property name="testOnBorrow" value="true" />
+        <property name="initialSize" value="5" />
     </bean>
     <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="dataSource"/>
