@@ -1,15 +1,15 @@
 package org.zapadlo.geodatacollect.web.controllers;
 
 import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.zapadlo.geodatacollect.entity.GeoData;
-import org.zapadlo.geodatacollect.services.GDCService;
+import org.zapadlo.geodatacollect.services.IGDCService;
 import org.zapadlo.geodatacollect.utils.Utils;
 
+import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 
@@ -20,8 +20,8 @@ import java.util.List;
 public class MainController {
     static final Logger logger = Logger.getLogger(MainController.class);
 
-    @Autowired
-    GDCService gdcService;
+    @Resource
+    IGDCService gdcService;
 
     @RequestMapping(value = "addGeoData")
     @ResponseStatus(HttpStatus.OK)

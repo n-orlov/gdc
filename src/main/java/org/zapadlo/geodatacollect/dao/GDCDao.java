@@ -1,49 +1,23 @@
 package org.zapadlo.geodatacollect.dao;
 
-import org.apache.commons.io.IOUtils;
-import org.springframework.dao.DataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import org.zapadlo.geodatacollect.entity.GeoData;
 import org.zapadlo.geodatacollect.utils.SimpleTimeMeasurer;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by int21h on 30.01.14.
  */
 @Repository
-public class GDCDao extends AbstractDao {
+public class GDCDao extends AbstractDao implements IGDCDao {
 
-    public Map<String, String> getProperties() {
-        Map<String, String> result = getJdbcTemplate().query("select * from properties", new ResultSetExtractor<Map<String, String>>() {
-            @Override
-            public Map<String, String> extractData(ResultSet resultSet) throws SQLException, DataAccessException {
-                Map<String, String> result = new HashMap<String, String>();
-                while (resultSet.next()) {
-                    ByteArrayOutputStream s = new ByteArrayOutputStream();
-                    try {
-                        IOUtils.copy(resultSet.getBinaryStream("name"), s);
-                        result.put(s.toString("UTF-8"), resultSet.getString("val"));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                return result;
-            }
-        });
-        return  result;
-    }
-
+    @Override
     public void addGeoData(GeoData geoData) {
         SimpleTimeMeasurer measurer = new SimpleTimeMeasurer("addGeoData / DAO");
         getJdbcTemplate().update("INSERT INTO GEO_DATA " +
@@ -68,6 +42,7 @@ public class GDCDao extends AbstractDao {
         return builder.toString();
     }
 
+    @Override
     public void addGeoData(List<GeoData> geoDataList) {
         SimpleTimeMeasurer measurer = new SimpleTimeMeasurer("addGeoData / DAO");
         Object[] params = new Object[7 * geoDataList.size()];
@@ -85,6 +60,7 @@ public class GDCDao extends AbstractDao {
         measurer.logFinish();
     }
 
+    @Override
     public GeoData getObjectPosition(String objectId, Date byDate) {
         try {
             GeoData result = getJdbcTemplate().queryForObject("select FIRST 1 " +
@@ -110,6 +86,7 @@ public class GDCDao extends AbstractDao {
         }
     }
 
+    @Override
     public GeoData getObjectPosition(String objectId) {
         try {
             GeoData result = getJdbcTemplate().queryForObject("select FIRST 1 " +
@@ -134,6 +111,7 @@ public class GDCDao extends AbstractDao {
         }
     }
 
+    @Override
     public List<GeoData> getObjectTrack(String objectId, Date from, Date to) {
         List<GeoData> result = getJdbcTemplate().query("select " +
                 "GD.ID," +

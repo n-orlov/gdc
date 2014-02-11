@@ -4,10 +4,29 @@
         <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
         <title>GDC</title>
         <link href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css">
+        <script src="http://maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
         <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
         <script src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+        <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
         <script>
             $(function() {
+            window.map = new OpenLayers.Map("mapdiv");
+            var osm = new OpenLayers.Layer.OSM();
+            var gmap = new OpenLayers.Layer.Google("Google Streets", {visibility: false});
+
+            // note that first layer must be visible
+            map.addLayers([osm, gmap]);
+
+            map.addControl(new OpenLayers.Control.LayerSwitcher());
+            map.zoomToMaxExtent();
+
+            var zoom=16;
+
+            var markers = new OpenLayers.Layer.Markers( "Markers" );
+            map.addLayer(markers);
+            map.setCenter ();
+
+
 
                 function ajax(byUrl, method, success, error, dataType) {
                     jQuery.ajax({
@@ -55,8 +74,10 @@
                     }
                     var dateDevice = $(".addGeoDataPane .dateDevice").val();
                     if (!dateDevice || dateDevice == "") {
-                        $(".addGeoDataPane .dateDevice").effect( "bounce", null, 500 );
-                        return;
+                        var date = new Date();
+                        dateDevice = date.getUTCDate() + '-' + (date.getUTCMonth() + 1) + '-' + date.getUTCFullYear() + ' '
+                            + date.getUTCHours() + ':' + date.getUTCMinutes() + ':' + date.getUTCSeconds() + ':' + date.getUTCMilliseconds()
+                            + ' +0000';
                     }
                     var lon = $(".addGeoDataPane .lon").val();
                     if (!lon || lon == "") {
@@ -175,7 +196,8 @@
                         getSimpleCallback(false, $(".getObjectTrack .resultText")),
                         "text");
                 });
-                $('.getObjectPosition .performBtn').click(function() {
+                     var marker;
+               $('.getObjectPosition .performBtn').click(function() {
                     var objectId = $(".getObjectPosition .objectId").val();
                     if (!objectId || objectId == "") {
                         $(".getObjectPosition .objectId").effect( "bounce", null, 500 );
@@ -189,10 +211,24 @@
                         'GET',
                         function (res) {
                             var dur = new Date() - start;
-                            getSimpleCallback(true, $(".getObjectPosition .resultText"))(res + ' / duration:' + dur);
+                            var lonLat = new OpenLayers.LonLat( res.lon ,res.lat )
+                                  .transform(
+                                    new OpenLayers.Projection("EPSG:4326"), // transform from WGS 1984
+                                    map.getProjectionObject() // to Spherical Mercator Projection
+                                  );
+                            if (marker) {
+                                markers.removeMarker(marker);
+                            }
+
+                            marker = new OpenLayers.Marker(lonLat);
+
+                            markers.addMarker(marker);
+
+                            map.setCenter (lonLat, zoom);
+                            getSimpleCallback(true, $(".getObjectPosition .resultText"))('lon: '+res.lon + ' lat' + res.lat + ' / duration:' + dur);
                         },
                         getSimpleCallback(false, $(".getObjectPosition .resultText")),
-                        "text");
+                        "json");
                 });
             });
         </script>
@@ -207,7 +243,7 @@
 			            Object id:
                     </td>
                     <td>
-			            <input type="text" class="objectId" value="8271ed7f1abe4dc19c8f056820f6fdca" />
+			            <input type="text" class="objectId" value="f2bc29b78c9c46719ea5aaeda2fcb245" />
                     </td>
                 </tr>
                 <tr>
@@ -215,7 +251,7 @@
 			            Device date (dd-MMM-yyyy hh:mm:ss:SSS ZZZ):
                     </td>
                     <td>
-			            <input type="text" class="dateDevice" value="05-02-2014 00:00:00:000 +0000" />
+			            <input type="text" class="dateDevice" value="" />
                     </td>
                 </tr>
                 <tr>
@@ -279,7 +315,7 @@
 			            Object id:
                     </td>
                     <td>
-			            <input type="text" class="objectId" value="8271ed7f1abe4dc19c8f056820f6fdca" />
+			            <input type="text" class="objectId" value="f2bc29b78c9c46719ea5aaeda2fcb245" />
                     </td>
                 </tr>
                 <tr>
@@ -287,7 +323,7 @@
 			            Date time FROM (dd-MMM-yyyy hh:mm:ss:SSS ZZZ):
                     </td>
                     <td>
-			            <input type="text" class="from" value="01-01-2014 00:00:00:000 +0000" />
+			            <input type="text" class="from" value="08-02-2014 10:00:00:000 +0400" />
                     </td>
                 </tr>
                 <tr>
@@ -295,7 +331,7 @@
 			            Date time TO (dd-MMM-yyyy hh:mm:ss:SSS ZZZ):
                     </td>
                     <td>
-			            <input type="text" class="to" value="01-01-2015 00:00:00:000 +0000" />
+			            <input type="text" class="to" value="08-02-2014 10:01:00:000 +0400" />
                     </td>
                 </tr>
 			</table>
@@ -310,7 +346,7 @@
 			            Object id:
                     </td>
                     <td>
-			            <input type="text" class="objectId" value="8271ed7f1abe4dc19c8f056820f6fdca" />
+			            <input type="text" class="objectId" value="f2bc29b78c9c46719ea5aaeda2fcb245" />
                     </td>
                 </tr>
                 <tr>
@@ -318,12 +354,13 @@
 			            Date time BY (dd-MMM-yyyy hh:mm:ss:SSS ZZZ):
                     </td>
                     <td>
-			            <input type="text" class="byDate" value="01-01-2015 00:00:00:000 +0000" />
+			            <input type="text" class="byDate" value="08-02-2014 10:01:00:000 +0400" />
                     </td>
                 </tr>
 			</table>
 			<input type="button" value="get data" class="performBtn" />
 			<div class="resultText"></div>
-		</div>
+            <div id="mapdiv" style="height: 300px;width:500px;"></div>
+ 		</div>
     </body>
 </html>
